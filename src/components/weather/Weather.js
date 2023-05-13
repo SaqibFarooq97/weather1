@@ -1,5 +1,5 @@
 import axios from "axios";
-import {  useState } from "react";
+import { useState } from "react";
 import { Spinner } from "../spinner/Spinner";
 
 export const Weather = () => {
@@ -23,18 +23,14 @@ export const Weather = () => {
           },
         }
       );
-      if (response && response.status === 200 && response.data) {
+      if (response && response.status === 200) {
         setError(false);
         setData(response.data);
         setLoading(false);
         setSearchPerformed(true);
-
-      }
-      else {
+      } else {
         setError(true);
         setLoading(false);
-
-        setErrorMessage("Error: Failed to fetch weather data.");
       }
     } catch (error) {
       if (error.response) {
@@ -42,16 +38,13 @@ export const Weather = () => {
       } else {
         setErrorMessage("Error: Failed to fetch weather data.");
       }
-      console.log(error)
       setError(true);
       setLoading(false);
     }
   };
 
- 
   const handleSearch = (e) => {
     e.preventDefault();
-
     if (inputText && inputText.trim() !== "") {
       setSearchPerformed(false);
 
