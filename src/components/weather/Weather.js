@@ -1,96 +1,109 @@
-import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { Spinner } from '../spinner/Spinner';
+import axios from "axios";
+import {  useState } from "react";
+import { Spinner } from "../spinner/Spinner";
 
-export const Weather = () =>  {
-  const [loading, setLoading] = useState(true);
+export const Weather = () => {
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [data, setData] = useState(null);
+  const [searchPerformed, setSearchPerformed] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        "https://api.openweathermap.org/data/2.5/weather",
+        {
           params: {
             q: inputText,
-            appid: '189271b827844bff7388350c44848615',
-            units: 'metric'
-          }
-        });
-        if (response.status === 200) {
-          setError(false);
-          setData(response.data);
-        } else {
-          throw new Error('Something went wrong');
+            appid: "189271b827844bff7388350c44848615",
+            units: "metric",
+          },
         }
-      } catch (error) {
-        setError(true);
-        console.error(error);
-      } finally {
+      );
+      if (response && response.status === 200 && response.data) {
+        setError(false);
+        setData(response.data);
         setLoading(false);
+        setSearchPerformed(true);
+
       }
-    };
+      else {
+        setError(true);
+        setLoading(false);
 
-    fetchData();
-  }, [inputText]);
-
-  const handleSearch = (e) => {
-    if (e.key === 'Enter') {
-      setInputText(e.target.value);
+        setErrorMessage("Error: Failed to fetch weather data.");
+      }
+    } catch (error) {
+      if (error.response) {
+        setErrorMessage(error.response.data.message);
+      } else {
+        setErrorMessage("Error: Failed to fetch weather data.");
+      }
+      console.log(error)
+      setError(true);
+      setLoading(false);
     }
   };
 
+ 
+  const handleSearch = (e) => {
+    e.preventDefault();
+
+    if (inputText && inputText.trim() !== "") {
+      setSearchPerformed(false);
+
+      fetchData();
+    }
+  };
   return (
     <div className="bg_img">
-      {loading ? (
-        <Spinner />
-      ) : (
+      <form className="forms" onSubmit={handleSearch}>
+        <input
+          placeholder="Search location"
+          className={`input `}
+          error={error}
+          value={inputText}
+          onChange={(e) => {
+            setInputText(e.target.value);
+          }}
+        />
+
+        <button type="submit" className="search-button">
+          Search
+        </button>
+      </form>
+      {error && <p className="error-message">{errorMessage}</p>}
+      {!loading && data && searchPerformed && (
         <>
-          <input
-            variant="filled"
-            placeholder="Search location"
-            className="input"
-            error={error}
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={handleSearch}
-          />
-          {data && (
-            <>
-              <h1 className="city">{data.name}</h1>
-              <div className="group">
-                <img
-                  src={`http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`}
-                  alt=""
-                />
-                <h1>{data.weather[0].main}</h1>
-              </div>
-
-              <h1 className="temp">{data.main.temp.toFixed()} °C</h1>
-
-              <div className="box_container">
-                <div className="box">
-                  <p>Humidity</p>
-                  <h1>{data.main.humidity.toFixed()}%</h1>
-                </div>
-
-                <div className="box">
-                  <p>Wind</p>
-                  <h1>{data.wind.speed.toFixed()} km/h</h1>
-                </div>
-
-                <div className="box">
-                  <p>Feels Like</p>
-                  <h1>{data.main.feels_like.toFixed()} °C</h1>
-                </div>
-              </div>
-            </>
-          )}
+          <h1 className="city">{data?.name || "City"}</h1>
+          <div className="group">
+            <img
+              src={`http://openweathermap.org/img/wn/${
+                data?.weather[0]?.icon || "placeholder"
+              }.png`}
+              alt=""
+            />
+            <h1>{data?.weather[0]?.main || "Weather"}</h1>
+          </div>
+          <h1 className="temp">
+            {data?.main?.temp?.toFixed() || "Temperature"} °C
+          </h1>
+          <div className="box_container">
+            <div className="box">
+              <p>Humidity</p>
+              <h1>{data?.main?.humidity?.toFixed() || "Humidity"}</h1>
+            </div>
+            <div className="box">
+              <p>Wind</p>
+              <h1>{data?.wind?.speed?.toFixed() || "Wind"} km/h</h1>
+            </div>
+          </div>
         </>
       )}
+      {loading && <Spinner />}
     </div>
   );
 };
-
-
